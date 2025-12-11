@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_REGION: ap-south-1
-  ECR_REPOSITORY: fastapi-sample
+  ECR_REPOSITORY: fastapi-practice
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
     - name: Configure AWS credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+        role-to-assume: arn:aws:iam::705166993722:role/GithubActionsRunner
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Login to Amazon ECR
@@ -36,4 +36,4 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         echo "Docker image ready: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-        # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG   # optional
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
