@@ -38,3 +38,19 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         echo "Docker image ready: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    - name: Deploy to EC2 via SSM
+      run: |
+        aws ssm send-command \
+        --targets "Key=InstanceIds,Values=i-01fea80a9937b9520" \
+        --document-name "AWS-RunShellScript" \
+        --comment "Deploy FastAPI Docker container" \
+        --parameters 'commands=[
+            "aws ecr get-login-password --region '${{ env.AWS_REGION }}' | docker login --username AWS --password-stdin '"${{ steps.login-ecr.outputs.registry }}"'",
+            "docker pull '${{ steps.login-ecr.outputs.registry }}/'${{ env.ECR_REPOSITORY }}:${{ github.run_number }}-${{ github.sha }}'",
+            "docker stop fastapi-container || true",
+            "docker rm fastapi-container || true",
+            "docker run -d --name fastapi-container -p 8000:8000 '${{ steps.login-ecr.outputs.registry }}/'${{ env.ECR_REPOSITORY }}:${{ github.run_number }}-${{ github.sha }}'"
+        ]' \
+        --region ${{ env.AWS_REGION }}
+
